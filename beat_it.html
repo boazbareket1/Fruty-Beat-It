@@ -205,8 +205,8 @@ function assignNotesForBeat(mi,bi,f){
   let lastDeg=(beatBase[bi]||0)%len;
   f.syllables.forEach((syl,si)=>{
     if(syl.k==='anacrusis'){
-      // anacrusis: one step below current anchor
-      const deg=((lastDeg-1)+len)%len;
+      // anacrusis: one step below current anchor (no wrap-around)
+      const deg=Math.max(0,lastDeg-1);
       notes.push(currentScaleFreqs[deg]);
     } else if(si===0||f.syllables.filter(s=>s.k!=='anacrusis').length===1){
       // first main syllable: use anchor
