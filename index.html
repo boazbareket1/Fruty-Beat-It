@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="he" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Beat it – משחק קצב פירות</title>
+<meta name="description" content="משחק קצב עם פירות: מרכיבים תיבות מקצב מקלפי פירות ושומעים אותן מתנגנות.">
+<meta property="og:title" content="Beat It">
+<meta property="og:description" content="משחק קצב עם פירות: מרכיבים תיבות מקצב מקלפי פירות ושומעים אותן מתנגנות.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://boazbareket1.github.io/Fruty-Beat-It/">
+<meta property="og:image" content="https://boazbareket1.github.io/Fruty-Beat-It/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="he_IL">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Varela+Round&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Varela Round',sans-serif;background:#eef7e2;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 40px;direction:ltr}
+.logo-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:28px;user-select:none}
+.logo-beat{font-family:'Fredoka One',cursive;font-size:3.4rem;letter-spacing:6px;line-height:1;background:linear-gradient(135deg,#2e7d0e 0%,#6dcc28 55%,#f5c430 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-transform:uppercase;filter:drop-shadow(0 2px 8px rgba(60,140,20,.22))}
+.logo-tagline{font-size:.82rem;color:#8ec455;letter-spacing:3px;text-transform:uppercase;margin-top:2px}
+.logo-sub{font-size:.9rem;color:#a8d870;margin-top:5px;direction:rtl}
+.card{background:#fff;border-radius:22px;padding:20px 20px 16px;box-shadow:0 5px 24px rgba(0,0,0,.08);width:100%;max-width:740px;margin-bottom:20px}
+.section-label{font-family:'Fredoka One',cursive;font-size:1rem;color:#b0d880;margin-bottom:12px;direction:rtl;text-align:right}
+.measure-row{display:flex;border:2.5px solid #a8d860;border-radius:13px 13px 0 0;overflow:visible;min-height:115px;background:#f8fef2;position:relative}
+.beat-slot{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:115px;border-right:2.5px solid #a8d860;position:relative;transition:background .16s;padding:6px 3px 4px}
+.beat-slot:last-child{border-right:none}
+.beat-slot.drag-over{background:#dcf8a0}
+.beat-slot.beat-active{background:#d0f870!important}
+.beat-number{position:absolute;top:5px;font-size:.64rem;color:#c0de98;font-weight:bold}
+.empty-beat{color:#cce8a0;font-size:1.7rem;margin-top:8px}
+.beat-fruit{display:flex;flex-direction:column;align-items:center;position:relative;cursor:grab;user-select:none}
+.f-emoji{font-size:2.4rem;pointer-events:none}
+.f-name{font-size:.7rem;font-weight:bold;color:#4a8c20;direction:rtl;margin-top:2px}
+.remove-btn{position:absolute;top:-8px;right:-8px;width:17px;height:17px;background:#ff6060;color:#fff;border:none;border-radius:50%;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .14s;z-index:10}
+.beat-fruit:hover .remove-btn{opacity:1}
+.sixteenth-row{display:flex;border:2.5px solid #a8d860;border-top:none;border-radius:0 0 13px 13px;overflow:hidden;background:#f2fce6;height:22px}
+.beat-section{flex:1;display:flex;border-right:2.5px solid #a8d860;position:relative}
+.beat-section:last-child{border-right:none}
+.s-cell{flex:1;border-right:1px solid #d8f0b0;height:100%;display:flex;align-items:center;justify-content:center;position:relative}
+.s-cell:last-child{border-right:none}
+.s-cell.on{background:#90dc30}.s-cell.on::after{content:'';width:5px;height:5px;border-radius:50%;background:#2a7a08;position:absolute}.s-cell.kick{background:#f0a030}.s-cell.kick::after{content:'';width:5px;height:5px;border-radius:50%;background:#a05010;position:absolute}.s-cell.snare{background:#90dc30}.s-cell.snare::after{content:'';width:5px;height:5px;border-radius:50%;background:#2a7a08;position:absolute}
+.s-cell.ana{background:#ffe080}.s-cell.ana::after{content:'';width:5px;height:5px;border-radius:50%;background:#c49010;position:absolute}
+.beat-section.triplet{background:#fafff0}
+.triplet-label{position:absolute;bottom:1px;left:50%;transform:translateX(-50%);font-size:8px;color:#90a060;line-height:1;pointer-events:none}
+.notation-row{display:grid;grid-template-columns:repeat(4,1fr);margin-top:8px;padding-top:6px;border-top:1px dashed #d0ecb0}
+.nb{display:flex;flex-direction:column;align-items:center;font-size:.78rem;color:#666;min-height:36px;justify-content:flex-start;padding:1px 2px 0;direction:rtl}
+.syls{display:flex;align-items:baseline;gap:1px;justify-content:center;direction:ltr;flex-wrap:wrap}
+.syl{font-size:.82rem;color:#4a8c20;font-weight:bold}
+.syl.anacrusis{font-size:.6rem;color:#b08800;font-weight:normal}
+.syl.anacrusis::after{content:'→';font-size:.5rem}
+.syl.weak{color:#88bb50;font-weight:normal}
+.sep{color:#ccc;font-size:.68rem;margin:0 1px}
+.syl-beat{font-size:1.05rem!important;font-weight:900!important;color:#2a7a08!important}
+.note-sym{font-size:.85rem;color:#b8d880;margin-top:1px;letter-spacing:3px}
+.actions{display:flex;justify-content:center;gap:8px;margin-top:14px;flex-wrap:wrap}
+.play-btn{background:#52a818;color:#fff;border:none;border-radius:12px;padding:9px 30px;font-family:'Varela Round',sans-serif;font-size:.95rem;cursor:pointer;font-weight:bold;direction:rtl;transition:background .18s,transform .1s}
+.play-btn:hover{background:#3e8c10;transform:scale(1.04)}
+.clear-btn{background:#ffaa80;color:#fff;border:none;border-radius:12px;padding:9px 22px;font-family:'Varela Round',sans-serif;font-size:.95rem;cursor:pointer;direction:rtl;transition:background .18s}
+.clear-btn:hover{background:#ff8050}
+.stop-btn{background:#e05030;color:#fff;border:none;border-radius:12px;padding:9px 22px;font-family:'Varela Round',sans-serif;font-size:.95rem;cursor:pointer;font-weight:bold;transition:background .18s}
+.stop-btn:hover{background:#c03010}
+.dl-btn{background:#5588dd;color:#fff;border:none;border-radius:12px;padding:9px 18px;font-family:'Varela Round',sans-serif;font-size:.88rem;cursor:pointer;direction:rtl;transition:background .18s;display:flex;align-items:center;gap:5px}
+.dl-btn:hover{background:#3366bb}
+.dl-go{background:none;border:0;color:#fff;font:inherit;cursor:pointer;padding:0}
+.fruit-card.selected{border-color:#f0a030;background:#fff6e0;box-shadow:0 0 0 3px rgba(240,160,48,.35)}
+.beat-slot.ready{outline:2px dashed #f0a030;outline-offset:-6px;cursor:pointer}
+.fruit-card:focus-visible,.beat-slot:focus-visible,button:focus-visible,select:focus-visible{outline:3px solid #f0a030;outline-offset:2px}
+.hint-bar{direction:rtl;text-align:center;font-size:.85rem;color:#7aaa40;margin-top:-4px;margin-bottom:10px;min-height:1.2em}
+@media (hover:none){.remove-btn{opacity:1;width:22px;height:22px;font-size:13px;top:-10px;right:-10px}}
+.dl-btn select{background:transparent;border:none;color:#fff;font-family:'Varela Round',sans-serif;font-size:.85rem;cursor:pointer;outline:none}
+.dl-btn select option{color:#333;background:#fff}
+.share-btn{background:#aa55dd;color:#fff;border:none;border-radius:12px;padding:9px 18px;font-family:'Varela Round',sans-serif;font-size:.88rem;cursor:pointer;direction:rtl;transition:background .18s}
+.share-btn:hover{background:#8833bb}
+.share-toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 22px;border-radius:12px;font-size:.9rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999;direction:rtl}
+.share-toast.show{opacity:1}
+.fruit-bank{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:4px}
+.fruit-card{display:flex;flex-direction:column;align-items:center;background:#f4fbe8;border:2px solid #c0e890;border-radius:14px;padding:10px 13px 8px;cursor:grab;user-select:none;min-width:70px;transition:transform .14s,box-shadow .14s,border-color .14s;touch-action:none}
+.fruit-card:hover{transform:translateY(-4px) scale(1.06);box-shadow:0 8px 22px rgba(70,170,20,.17);border-color:#80d838}
+.fruit-card:active{transform:scale(.95);cursor:grabbing}
+.card-emoji{font-size:2.5rem;pointer-events:none}
+.card-name{font-size:.78rem;font-weight:bold;color:#4a8c20;margin-top:4px;direction:rtl}
+.card-dots{display:flex;gap:2px;margin-top:5px}
+.dot{width:7px;height:7px;border-radius:2px;background:#d8f0b0}
+.dot.on{background:#52a818}.dot.kick{background:#f0a030}.dot.snare{background:#52a818}.dot.ana{background:#e8c030}
+.dragging{opacity:.3;transform:scale(.88)}
+.sound-mode-row{display:flex;justify-content:center;gap:8px;margin-top:14px;margin-bottom:2px;flex-wrap:wrap}
+.mode-btn{background:#f0f8e8;border:2px solid #c0e080;border-radius:10px;padding:6px 14px;font-family:'Varela Round',sans-serif;font-size:.82rem;cursor:pointer;color:#5a8a30;transition:all .15s}
+.mode-btn:hover{background:#e0f4cc;border-color:#90cc40}
+.mode-btn.active{background:#5aaa20;border-color:#3e8010;color:#fff;font-weight:bold}
+.mode-sep{color:#c0e080;font-size:1.2rem;align-self:center}
+.tempo-row{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+.tempo-label{font-size:.82rem;color:#7aaa40;direction:rtl}
+.tempo-val{font-family:'Fredoka One',cursive;font-size:1rem;color:#4a8c20;min-width:32px;text-align:center}
+#tempoSlider{-webkit-appearance:none;appearance:none;width:140px;height:5px;background:#c8e898;border-radius:3px;outline:none}
+#tempoSlider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#5aaa20;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.scale-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;flex-wrap:wrap;direction:rtl}
+.scale-row label{font-size:.82rem;color:#7aaa40}
+.scale-row select{font-family:'Varela Round',sans-serif;font-size:.82rem;border:2px solid #c0e080;border-radius:8px;padding:4px 8px;color:#4a8c20;background:#f0f8e8;outline:none;cursor:pointer}
+#touchGhost{position:fixed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);font-size:2.8rem;display:none}
+</style>
+</head>
+<body>
+<div id="touchGhost"></div>
+<div class="share-toast" id="shareToast">הלינק הועתק! 🎵</div>
+<div class="logo-wrap">
+  <div class="logo-beat">Beat it</div>
+  <div class="logo-tagline">🎵 rhythm &amp; fruits 🎵</div>
+  <div class="logo-sub">גרור פירות לתיבה וצור מקצב</div>
+</div>
+<div class="card controls-card">
+  <div class="sound-mode-row">
+    <button class="mode-btn active" id="mode-drums" onclick="setMode('drums')">🥁 תופים</button>
+    <button class="mode-btn" id="mode-marimba" onclick="setMode('marimba')">🔔 ויברפון</button>
+    <button class="mode-btn" id="mode-beep" onclick="setMode('beep')">🪗 אקורדיון</button>
+  </div>
+  <div class="scale-row">
+    <label>סולם:</label>
+    <select id="scaleSelect" onchange="updateScale()">
+      <option value="major">מז'ור – C D E F G A B</option>
+      <option value="minor">מינור טבעי – A B C D E F G</option>
+      <option value="penta">פנטטוני – C D E G A</option>
+    </select>
+    <label>תו בסיס:</label>
+    <select id="rootSelect" onchange="updateScale()">
+      <option value="C">C</option><option value="D">D</option><option value="E">E</option>
+      <option value="F">F</option><option value="G">G</option><option value="A">A</option><option value="B">B</option>
+    </select>
+  </div>
+  <div class="sound-mode-row">
+    <button class="mode-btn active" id="rep-2" onclick="setReps(2)">× 2</button>
+    <button class="mode-btn" id="rep-4" onclick="setReps(4)">× 4</button>
+    <button class="mode-btn" id="rep-loop" onclick="setReps('loop')">🔁 לופ</button>
+    <span class="mode-sep">|</span>
+    <button class="mode-btn active" id="measures-1" onclick="setMeasures(1)">תיבה 1</button>
+    <button class="mode-btn" id="measures-2" onclick="setMeasures(2)">תיבות 2</button>
+  </div>
+  <div class="tempo-row">
+    <span class="tempo-label">טמפו</span>
+    <input type="range" id="tempoSlider" min="40" max="180" value="88"
+      oninput="document.getElementById('tempoVal').textContent=this.value">
+    <span class="tempo-val" id="tempoVal">88</span>
+    <span class="tempo-label">BPM</span>
+  </div>
+  <div class="actions">
+    <button class="play-btn" id="playBtn" onclick="playAll()">▶ נגן</button>
+    <button class="stop-btn" id="stopBtn" onclick="stopPlay()" style="display:none">■ עצור</button>
+    <button class="clear-btn" onclick="clearAll()">נקה הכל</button>
+    <div class="dl-btn">
+      <button type="button" class="dl-go" onclick="handleDownload()">⬇ הורד</button>
+      <select id="dlFormat" aria-label="פורמט הורדה">
+        <option value="wav">WAV</option>
+        <option value="midi">MIDI</option>
+      </select>
+    </div>
+    <button class="share-btn" onclick="sharebeat()">🔗 שתף ביט</button>
+  </div>
+</div>
+<div class="card">
+  <div class="section-label">תיבה 1 — 4 פעמות</div>
+  <div class="measure-row" id="measureRow1"></div>
+  <div class="sixteenth-row" id="sixRow1"></div>
+  <div class="notation-row" id="notRow1"></div>
+</div>
+<div class="card" id="measure2Card" style="display:none">
+  <div class="section-label">תיבה 2 — 4 פעמות</div>
+  <div class="measure-row" id="measureRow2"></div>
+  <div class="sixteenth-row" id="sixRow2"></div>
+  <div class="notation-row" id="notRow2"></div>
+</div>
+<div class="card">
+  <div class="section-label">מאגר הפירות</div>
+  <div class="hint-bar" id="hintBar">גוררים פרי לפעמה, או מקישים על פרי ואז על הפעמה</div>
+  <div class="fruit-bank" id="fruitBank"></div>
+</div>
+<script>
+const fruits=[
+  {id:'tot',name:'תות',emoji:'🍓',cells:[true,false,false,false],syllables:[{t:'תות',k:'main'}],noteStr:'♩'},
+  {id:'nana',name:'נענע',emoji:'🌿',cells:[true,false,true,false],syllables:[{t:'נע',k:'main'},{t:'נע',k:'weak2'}],noteStr:'♪♪'},
+  {id:'mango',name:'מנגו',emoji:'🥭',cells:[true,false,true,false],syllables:[{t:'מנ',k:'main'},{t:'גו',k:'main'}],noteStr:'♪♪'},
+  {id:'chasa',name:'חסה',emoji:'🥬',cells:[true,false,true,false],noDownbeat:true,syllables:[{t:'חַ',k:'weak'},{t:'סָה',k:'weak'}],noteStr:'♪♪'},
+  {id:'pilpel',name:'פלפל',emoji:'🫑',cells:[true,false,true,false],syllables:[{t:'פַל',k:'main'},{t:'פֵל',k:'weak'}],noteStr:'♪♪'},
+  {id:'ananas',name:'אננס',emoji:'🍍',triplet:true,cells:[true,true,true],syllables:[{t:'א',k:'main'},{t:'נַ',k:'main'},{t:'נס',k:'main'}],noteStr:'³'},
+  {id:'banana',name:'בננה',emoji:'🍌',cells:[true,false,true,false],anacrusis:true,anacrusis_cells:1,syllables:[{t:'בְּ',k:'anacrusis'},{t:'נַ',k:'main'},{t:'נָה',k:'weak'}],noteStr:'♪♪'},
+  {id:'broccoli',name:'ברוקולי',emoji:'🥦',cells:[true,true,true,false],syllables:[{t:'רו',k:'main'},{t:'קו',k:'weak'},{t:'לי',k:'weak'}],noteStr:'𝅘𝅥𝅯𝅘𝅥𝅯𝅘𝅥𝅯'},
+  {id:'shum',name:'שום',emoji:'🧄',cells:[true,false,false,false],syllables:[{t:'שום',k:'main'}],noteStr:'♩'},
+  {id:'batsal',name:'בצל',emoji:'🧅',cells:[true,false,false,false],anacrusis:true,anacrusis_cells:1,syllables:[{t:'בְּ',k:'anacrusis'},{t:'צַל',k:'main'}],noteStr:'♪'},
+  {id:'avocado',name:'אבוקדו',emoji:'🥑',cells:[true,true,false,false],anacrusis:true,anacrusis_cells:2,syllables:[{t:'א',k:'anacrusis'},{t:'בו',k:'anacrusis'},{t:'קָ',k:'main'},{t:'דו',k:'weak'}],noteStr:'𝅘𝅥𝅯𝅘𝅥𝅯'},
+  {id:'tapuach',name:'תפוח',emoji:'🍎',cells:[true,false,true,false],anacrusis:true,anacrusis_cells:1,syllables:[{t:'ת',k:'anacrusis'},{t:'פּוּ',k:'main'},{t:'ח',k:'weak'}],noteStr:'♪♪'},
+  {id:'artichoke',name:'ארטישוק',emoji:'🌱',cells:[true,false,false,false],anacrusis:true,anacrusis_cells:2,syllables:[{t:'אר',k:'anacrusis'},{t:'טי',k:'anacrusis'},{t:'שוק',k:'main'}],noteStr:'♩'},
+  {id:'gezer',name:'גזר',emoji:'🥕',cells:[true,true,false,false],syllables:[{t:'גֶ',k:'main'},{t:'זֶר',k:'main'}],noteStr:'𝅘𝅥𝅯𝅘𝅥𝅯'},
+  {id:'tiras',name:'תירס',emoji:'🌽',cells:[true,true,false,false],noDownbeat:true,syllables:[{t:'תִּיר',k:'weak'},{t:'ס',k:'weak'}],noteStr:'𝅘𝅥𝅯𝅘𝅥𝅯'},
+  {id:'klemantina',name:'קלמנטינה',emoji:'🍊',cells:[true,true,false,false],anacrusis:true,anacrusis_cells:2,syllables:[{t:'קַל',k:'anacrusis'},{t:'מַן',k:'anacrusis'},{t:'טִי',k:'main'},{t:'נָה',k:'weak'}],noteStr:'𝅘𝅥𝅯𝅘𝅥𝅯'},
+  {id:'duvdevan',name:'דובדבן',emoji:'🍒',cells:[true,false,false,false],anacrusis:true,anacrusis_cells:2,syllables:[{t:'דוב',k:'anacrusis'},{t:'דְּ',k:'anacrusis'},{t:'בַן',k:'main'}],noteStr:'♪'},
+];
+const SCALE_INTERVALS={major:[0,2,4,5,7,9,11],minor:[0,2,3,5,7,8,10],penta:[0,2,4,7,9]};
+const ROOT_MIDI={C:60,D:62,E:64,F:65,G:67,A:69,B:71};
+let currentScaleFreqs=[],currentScaleIntervals=[];
+function midiToFreq(m){return 440*Math.pow(2,(m-69)/12);}
+function updateScale(){
+  const scale=document.getElementById('scaleSelect').value;
+  const root=document.getElementById('rootSelect').value;
+  const intervals=SCALE_INTERVALS[scale];
+  currentScaleIntervals=intervals;
+  const rootMidi=ROOT_MIDI[root];
+  currentScaleFreqs=[];
+  for(let oct=0;oct<3;oct++) intervals.forEach(iv=>currentScaleFreqs.push(midiToFreq(rootMidi+iv+oct*12)));
+  // רנדר מחדש את כל הפירות שמונחים בתיבות
+  for(let mi=0;mi<2;mi++) measures[mi].forEach((fid,bi)=>{
+    if(fid) assignNotesForBeat(mi,bi,fruits.find(x=>x.id===fid));
+  });
+}
+const beatNoteCache={};
+function assignNotesForBeat(mi,bi,f){
+  const key=`${mi}-${bi}`;
+  const len=currentScaleFreqs.length;
+  const notes=[];
+  // anchor degree for this beat: spread across the scale
+  const beatBase=[0,1,2,3];
+  let lastDeg=(beatBase[bi]||0)%len;
+  f.syllables.forEach((syl,si)=>{
+    if(syl.k==='anacrusis'){
+      // anacrusis: one step below current anchor (no wrap-around)
+      const deg=Math.max(0,lastDeg-1);
+      notes.push(currentScaleFreqs[deg]);
+    } else if(si===0||f.syllables.filter(s=>s.k!=='anacrusis').length===1){
+      // first main syllable: use anchor
+      notes.push(currentScaleFreqs[lastDeg]);
+    } else {
+      // subsequent: move exactly ±1 step (60% up, 40% down)
+      const step=Math.random()<0.6?1:-1;
+      lastDeg=Math.max(0,Math.min(len-1,lastDeg+step));
+      notes.push(currentScaleFreqs[lastDeg]);
+    }
+  });
+  beatNoteCache[key]=notes;
+}
+function getFreqForEvent(ev){
+  const key=`${ev.mi}-${ev.beatIdx}`;
+  const cached=beatNoteCache[key];
+  if(cached&&cached[ev.sylIndex]!==undefined) return cached[ev.sylIndex];
+  const beatBase=[0,2,4,6];
+  return currentScaleFreqs[(beatBase[ev.beatIdx]||0)%currentScaleFreqs.length]||440;
+}
+const measures=[[null,null,null,null],[null,null,null,null]];
+let soundMode='drums',repSetting=2,measureCount=1;
+let loopActive=false,loopTimeouts=[];
+let audioCtx=null;
+updateScale();
+function getCtx(){
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
+}
+function buildMeasureDOM(mi){
+  const row=document.getElementById('measureRow'+(mi+1));
+  const notRow=document.getElementById('notRow'+(mi+1));
+  row.innerHTML='';notRow.innerHTML='';
+  for(let bi=0;bi<4;bi++){
+    const slot=document.createElement('div');
+    slot.className='beat-slot';slot.dataset.beat=bi;slot.dataset.mi=mi;
+    slot.tabIndex=0;slot.setAttribute('role','button');slot.setAttribute('aria-label',`תיבה ${mi+1}, פעמה ${bi+1}`);
+    slot.addEventListener('click',e=>{if(e.target.closest('.remove-btn'))return;if(selectedFruit)placeFruit(mi,bi,selectedFruit);});
+    slot.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&selectedFruit){e.preventDefault();placeFruit(mi,bi,selectedFruit);}});
+    slot.innerHTML=`<span class="beat-number">${bi+1}</span><span class="empty-beat">＋</span>`;
+    row.appendChild(slot);
+    const nb=document.createElement('div');nb.className='nb';nb.dataset.nb=bi;
+    notRow.appendChild(nb);
+  }
+  setupDropMeasure(mi);updateSixRow(mi);
+}
+function renderMeasure(mi){
+  const slots=document.querySelectorAll(`#measureRow${mi+1} .beat-slot`);
+  const nbs=document.querySelectorAll(`#notRow${mi+1} .nb`);
+  slots.forEach((slot,i)=>{
+    slot.innerHTML=`<span class="beat-number">${i+1}</span>`;
+    const fid=measures[mi][i];
+    if(fid){
+      const f=fruits.find(x=>x.id===fid);
+      const div=document.createElement('div');
+      div.className='beat-fruit';div.draggable=true;div.dataset.fruitId=fid;
+      div.innerHTML=`<button class="remove-btn" onclick="removeBeat(${mi},${i})">×</button><div class="f-emoji">${f.emoji}</div><div class="f-name">${f.name}</div>`;
+      div.addEventListener('dragstart',()=>{draggedId=fid;div.classList.add('dragging');setTimeout(()=>div.classList.remove('dragging'),0)});
+      slot.appendChild(div);
+      const sylHTML=f.syllables.map((s,si)=>{
+        const needSep=si>0&&s.k!=='anacrusis';
+        const isMain=s.k==='main';
+        return `${needSep?'<span class="sep">-</span>':''}<span class="syl ${s.k}${isMain?' syl-beat':''}">${s.t}</span>`;
+      }).join('');
+      nbs[i].innerHTML=`<div class="syls">${sylHTML}</div><div class="note-sym">${f.noteStr}</div>`;
+    } else {
+      slot.innerHTML+=`<span class="empty-beat">＋</span>`;
+      nbs[i].innerHTML='';
+    }
+  });
+  updateSixRow(mi);
+}
+function removeBeat(mi,i){measures[mi][i]=null;renderMeasure(mi);}
+function clearAll(){measures[0]=[null,null,null,null];measures[1]=[null,null,null,null];renderMeasure(0);renderMeasure(1);}
+function getCellDrumTypes(f){
+  const types=new Array(f.cells.length).fill(null);
+  let cellIdx=0;
+  f.syllables.forEach(syl=>{
+    if(syl.k==='anacrusis') return;
+    while(cellIdx<f.cells.length&&!f.cells[cellIdx]) cellIdx++;
+    if(cellIdx>=f.cells.length) return;
+    const isDownbeat=cellIdx===0&&!f.noDownbeat;
+    types[cellIdx]=(isDownbeat||syl.k==='main')?'kick':'snare';
+    cellIdx++;
+  });
+  return types;
+}
+function updateSixRow(mi){
+  const row=document.getElementById('sixRow'+(mi+1));
+  if(!row) return;
+  row.innerHTML='';
+  for(let bi=0;bi<4;bi++){
+    const fid=measures[mi][bi];
+    const f=fid?fruits.find(x=>x.id===fid):null;
+    const isTriplet=f&&f.triplet;
+    const section=document.createElement('div');
+    section.className='beat-section'+(isTriplet?' triplet':'');
+    const divCount=isTriplet?3:4;
+    for(let ci=0;ci<divCount;ci++){
+      const cell=document.createElement('div');
+      cell.className='s-cell';
+      if(f&&f.cells[ci]){const dt=getCellDrumTypes(f);cell.classList.add(dt[ci]||'on');}
+      section.appendChild(cell);
+    }
+    if(isTriplet){const lbl=document.createElement('div');lbl.className='triplet-label';lbl.textContent='3';section.appendChild(lbl);}
+    row.appendChild(section);
+  }
+  // clear cross-measure ana marks from beat 4 of previous measure before repainting
+  if(mi===1){
+    const prevRow=document.getElementById('sixRow1');
+    if(prevRow) prevRow.querySelectorAll('.beat-section')[3]?.querySelectorAll('.s-cell').forEach(c=>c.classList.remove('ana'));
+  }
+  measures[mi].forEach((fid,bi)=>{
+    if(!fid) return;
+    const f=fruits.find(x=>x.id===fid);
+    if(!f||!f.anacrusis) return;
+    const nAna=f.anacrusis_cells||1;
+    if(bi===0&&mi>0&&measureCount>1){
+      // cross-measure: paint in beat 4 of measure 1
+      const prevRow=document.getElementById('sixRow'+mi);
+      if(prevRow){
+        const prevCells=prevRow.querySelectorAll('.beat-section')[3]?.querySelectorAll('.s-cell');
+        if(prevCells) for(let a=0;a<nAna;a++){const idx=prevCells.length-1-a;if(idx>=0)prevCells[idx].classList.add('ana');}
+      }
+    } else {
+      const prevBi=bi===0?3:bi-1;
+      const sections=row.querySelectorAll('.beat-section');
+      const prevCells=sections[prevBi].querySelectorAll('.s-cell');
+      for(let a=0;a<nAna;a++){const idx=prevCells.length-1-a;if(idx>=0)prevCells[idx].classList.add('ana');}
+    }
+  });
+  // when rebuilding measure 1, re-check if measure 2 beat 1 has cross-measure anacrusis
+  if(mi===0&&measureCount>1){
+    const fid=measures[1]?.[0];
+    if(fid){const f=fruits.find(x=>x.id===fid);if(f&&f.anacrusis){
+      const nAna=f.anacrusis_cells||1;
+      const prevCells=row.querySelectorAll('.beat-section')[3]?.querySelectorAll('.s-cell');
+      if(prevCells) for(let a=0;a<nAna;a++){const idx=prevCells.length-1-a;if(idx>=0)prevCells[idx].classList.add('ana');}
+    }}
+  }
+}
+let draggedId=null;
+function setupDropMeasure(mi){
+  document.querySelectorAll(`#measureRow${mi+1} .beat-slot`).forEach(slot=>{
+    slot.addEventListener('dragover',e=>{e.preventDefault();slot.classList.add('drag-over')});
+    slot.addEventListener('dragleave',()=>slot.classList.remove('drag-over'));
+    slot.addEventListener('drop',e=>{
+      e.preventDefault();slot.classList.remove('drag-over');
+      if(draggedId) placeFruit(mi,+slot.dataset.beat,draggedId,true);
+    });
+  });
+}
+// בחירת פרי בהקשה ואז הקשה על פעמה (עובד בטלפון, במחשב ובמקלדת)
+let selectedFruit=null;
+function selectFruit(fid){
+  selectedFruit=selectedFruit===fid?null:fid;
+  document.querySelectorAll('.fruit-card').forEach(c=>{const on=c.dataset.fruitId===selectedFruit;c.classList.toggle('selected',on);c.setAttribute('aria-pressed',on);});
+  document.querySelectorAll('.beat-slot').forEach(s=>s.classList.toggle('ready',!!selectedFruit));
+  const f=selectedFruit&&fruits.find(x=>x.id===selectedFruit);
+  document.getElementById('hintBar').textContent=f?`נבחר: ${f.emoji} ${f.name} · עכשיו מקישים על הפעמה שבה הוא יישב`:'גוררים פרי לפעמה, או מקישים על פרי ואז על הפעמה';
+}
+function placeFruit(mi,bi,fid,keepSelection){
+  measures[mi][bi]=fid;
+  assignNotesForBeat(mi,bi,fruits.find(x=>x.id===fid));
+  renderMeasure(mi);
+  if(!keepSelection&&selectedFruit) selectFruit(selectedFruit);
+}
+const ghost=document.getElementById('touchGhost');
+let touchFruitId=null,scrollInterval=null,touchStart=null,touchDragging=false;
+function setupTouchBank(){
+  document.querySelectorAll('.fruit-card').forEach(card=>{
+    // לא חוסמים גלילה במגע: הגרירה מתחילה רק אחרי תזוזה של כמה פיקסלים
+    card.addEventListener('touchstart',e=>{
+      touchFruitId=card.dataset.fruitId;touchDragging=false;
+      touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY};
+    },{passive:true});
+  });
+  document.addEventListener('touchmove',e=>{
+    if(!touchFruitId) return;
+    const t=e.touches[0];
+    if(!touchDragging){
+      if(Math.hypot(t.clientX-touchStart.x,t.clientY-touchStart.y)<10) return;
+      touchDragging=true;
+      ghost.textContent=fruits.find(x=>x.id===touchFruitId).emoji;
+      ghost.style.display='block';
+    }
+    e.preventDefault();
+    moveTouchGhost(t);
+    clearInterval(scrollInterval);
+    const edgeZone=80,speed=8;
+    if(t.clientY<edgeZone) scrollInterval=setInterval(()=>window.scrollBy(0,-speed),16);
+    else if(t.clientY>window.innerHeight-edgeZone) scrollInterval=setInterval(()=>window.scrollBy(0,speed),16);
+    document.querySelectorAll('.beat-slot').forEach(s=>s.classList.remove('drag-over'));
+    const el=document.elementFromPoint(t.clientX,t.clientY);
+    const slot=el&&el.closest('.beat-slot');
+    if(slot) slot.classList.add('drag-over');
+  },{passive:false});
+  document.addEventListener('touchend',e=>{
+    if(!touchFruitId) return;
+    clearInterval(scrollInterval);
+    ghost.style.display='none';
+    if(touchDragging){
+      e.preventDefault(); // מונע "קליק" מדומה אחרי גרירה
+      const t=e.changedTouches[0];
+      const el=document.elementFromPoint(t.clientX,t.clientY);
+      const slot=el&&el.closest('.beat-slot');
+      if(slot) placeFruit(+slot.dataset.mi,+slot.dataset.beat,touchFruitId,true);
+    }
+    document.querySelectorAll('.beat-slot').forEach(s=>s.classList.remove('drag-over'));
+    touchFruitId=null;touchDragging=false;
+  },{passive:false});
+}
+function moveTouchGhost(t){ghost.style.left=t.clientX+'px';ghost.style.top=t.clientY+'px';}
+function buildBank(){
+  const bank=document.getElementById('fruitBank');
+  bank.innerHTML='';
+  fruits.forEach(f=>{
+    const card=document.createElement('div');
+    card.className='fruit-card';card.draggable=true;card.dataset.fruitId=f.id;
+    const dt=getCellDrumTypes(f);const dots=f.cells.map((on,ci)=>`<div class="dot ${on?(dt[ci]||'on'):''}"></div>`).join('');
+    const anaDot=f.anacrusis?`<div class="dot ana"></div>`:'';
+    const tripletLabel=f.triplet?`<span style="font-size:.6rem;color:#90a060;margin-left:2px">³</span>`:'';
+    card.innerHTML=`<div class="card-emoji">${f.emoji}</div><div class="card-name">${f.name}</div><div class="card-dots">${anaDot}${dots}${tripletLabel}</div>`;
+    card.addEventListener('dragstart',()=>{draggedId=f.id;card.classList.add('dragging');setTimeout(()=>card.classList.remove('dragging'),0)});
+    card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-pressed','false');card.setAttribute('aria-label',`${f.name} – בחירה`);
+    card.addEventListener('click',()=>selectFruit(f.id));
+    card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selectFruit(f.id);}});
+    bank.appendChild(card);
+  });
+  setupTouchBank();
+}
+function setMode(m){soundMode=m;['beep','drums','marimba'].forEach(k=>document.getElementById('mode-'+k).classList.toggle('active',k===m));}
+function setReps(v){repSetting=v;['2','4','loop'].forEach(k=>document.getElementById('rep-'+k).classList.remove('active'));document.getElementById('rep-'+v).classList.add('active');}
+function setMeasures(v){
+  measureCount=v;[1,2].forEach(k=>document.getElementById('measures-'+k).classList.remove('active'));
+  document.getElementById('measures-'+v).classList.add('active');
+  document.getElementById('measure2Card').style.display=v===2?'':'none';
+}
+// אקורדיון: saw wave + vibrato + envelope אופייני
+function playBeep(time,freq,vol){
+  const ctx=getCtx();
+  // saw wave לצליל האקורדיון
+  const osc=ctx.createOscillator();
+  osc.type='sawtooth';
+  osc.frequency.value=freq;
+  // vibrato
+  const vib=ctx.createOscillator();
+  const vibG=ctx.createGain();
+  vib.frequency.value=5.5; // קצב ויברטו ~5.5Hz
+  vibG.gain.value=freq*0.012; // עומק ויברטו
+  vib.connect(vibG);
+  vibG.connect(osc.frequency);
+  // פילטר להרך את ה-saw
+  const filter=ctx.createBiquadFilter();
+  filter.type='lowpass';
+  filter.frequency.value=freq*4;
+  filter.Q.value=1.2;
+  // envelope: attack קצר, sustain, release
+  const g=ctx.createGain();
+  g.gain.setValueAtTime(0.001,time);
+  g.gain.linearRampToValueAtTime(vol||0.4,time+0.03);
+  g.gain.setValueAtTime(vol||0.4,time+0.18);
+  g.gain.exponentialRampToValueAtTime(0.001,time+0.38);
+  osc.connect(filter);filter.connect(g);g.connect(ctx.destination);
+  vib.start(time);vib.stop(time+0.4);
+  osc.start(time);osc.stop(time+0.4);
+}
+function playKick(time,isDownbeat){
+  const ctx=getCtx(),o=ctx.createOscillator(),g=ctx.createGain();
+  o.connect(g);g.connect(ctx.destination);
+  o.frequency.setValueAtTime(isDownbeat?200:160,time);o.frequency.exponentialRampToValueAtTime(35,time+.18);
+  g.gain.setValueAtTime(isDownbeat?.9:.65,time);g.gain.exponentialRampToValueAtTime(.001,time+.22);
+  o.start(time);o.stop(time+.24);
+}
+function playSnare(time){
+  const ctx=getCtx(),buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*.12),ctx.sampleRate);
+  const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  const src=ctx.createBufferSource(),hp=ctx.createBiquadFilter(),g=ctx.createGain();
+  src.buffer=buf;hp.type='highpass';hp.frequency.value=2000;
+  src.connect(hp);hp.connect(g);g.connect(ctx.destination);
+  g.gain.setValueAtTime(.25,time);g.gain.exponentialRampToValueAtTime(.001,time+.07);
+  src.start(time);src.stop(time+.08);
+}
+function playDrum(time,isDownbeat,isMain){if(isDownbeat||isMain)playKick(time,isDownbeat);else playSnare(time);}
+// ויברפון: אטאק חד + vibrato מתמשך + decay ארוך
+function playMarimba(time,freq,vol){
+  const ctx=getCtx();
+  // שני oscillators בהפרש קטן — נותן עומק
+  const osc1=ctx.createOscillator(), osc2=ctx.createOscillator();
+  osc1.type='sine'; osc1.frequency.value=freq;
+  osc2.type='sine'; osc2.frequency.value=freq*1.003; // detune קל
+  // vibrato — האופי של ויברפון
+  const vib=ctx.createOscillator(), vibG=ctx.createGain();
+  vib.frequency.value=4.8;
+  vibG.gain.setValueAtTime(0,time);
+  vibG.gain.linearRampToValueAtTime(freq*0.006,time+0.08);
+  vib.connect(vibG); vibG.connect(osc1.frequency); vibG.connect(osc2.frequency);
+  // הרמוניה עדינה
+  const osc3=ctx.createOscillator();
+  osc3.type='sine'; osc3.frequency.value=freq*2;
+  const g3=ctx.createGain(); g3.gain.value=0.06;
+  osc3.connect(g3);
+  // envelope: אטאק חד (כמו מרימבה) + decay ארוך יותר
+  const g=ctx.createGain();
+  g.gain.setValueAtTime(vol||0.55,time);
+  g.gain.exponentialRampToValueAtTime((vol||0.55)*0.3,time+0.08);
+  g.gain.exponentialRampToValueAtTime(0.001,time+0.7);
+  osc1.connect(g); osc2.connect(g); g3.connect(g); g.connect(ctx.destination);
+  vib.start(time); vib.stop(time+0.75);
+  osc1.start(time); osc1.stop(time+0.75);
+  osc2.start(time); osc2.stop(time+0.75);
+  osc3.start(time); osc3.stop(time+0.75);
+}
+function buildEvents(mi,beatDur){
+  const events=[];
+  measures[mi].forEach((fid,bi)=>{
+    if(!fid) return;
+    const f=fruits.find(x=>x.id===fid);
+    const beatStart=bi*beatDur;
+    const divs=f.triplet?3:4;
+    const divDur=beatDur/divs;
+    const nAna=f.anacrusis_cells||(f.anacrusis?1:0);
+    events.push({timeMs:beatStart*1000,isDownbeat:bi===0,beatIdx:bi,name:f.name,type:'beat',mi});
+    let anaCount=0,cellIdx=0,sylIndex=0;
+    f.syllables.forEach(syl=>{
+      if(syl.k==='anacrusis'){
+        const prevBi=bi===0?3:bi-1;
+        const prevFid=measures[mi][prevBi];
+        const prevF=prevFid?fruits.find(x=>x.id===prevFid):null;
+        const prevDivs=prevF&&prevF.triplet?3:4;
+        const prevDivDur=beatDur/prevDivs;
+        const stepsBack=nAna-anaCount;
+        // מחשב כמה תאים יש בפרי הקודם ומאיפה האנקרוזיס מתחיל
+        const prevLastOnCell=prevF?[...prevF.cells].map((v,i)=>v?i:-1).filter(i=>i>=0).pop()??-1:-1;
+        // האנקרוזיס מוכנס אחרי הצליל האחרון של הפרי הקודם — הזזה ב-0.5 divDur
+        let baseTime;
+        if(bi===0){
+          baseTime=(4*beatDur-stepsBack*prevDivDur)*1000;
+        } else {
+          baseTime=((bi-1)*beatDur+(prevDivs-stepsBack)*prevDivDur)*1000;
+        }
+        // הוסף offset קטן כדי למנוע התנגשות עם הצליל הקודם
+        const collisionOffset=10; // 10ms offset
+        events.push({timeMs:baseTime+collisionOffset,isDownbeat:false,beatIdx:prevBi,name:f.name,syllable:syl.t,type:'syllable',isMain:false,sylIndex,circular:bi===0,mi});
+        anaCount++;sylIndex++;
+      } else {
+        while(cellIdx<f.cells.length&&!f.cells[cellIdx])cellIdx++;
+        const t=(beatStart+cellIdx*divDur)*1000;
+        events.push({timeMs:t,isDownbeat:cellIdx===0&&!f.noDownbeat,isMain:syl.k==='main',beatIdx:bi,name:f.name,syllable:syl.t,type:'syllable',sylIndex,mi});
+        cellIdx++;sylIndex++;
+      }
+    });
+  });
+  // מיין לפי זמן ואז הסר כפילויות — אם שני אירועים באותו זמן בדיוק, השאר רק את הראשון
+  events.sort((a,b)=>a.timeMs-b.timeMs);
+  const seen=new Set();
+  return events.filter(ev=>{
+    if(ev.type!=='syllable') return true;
+    const k=`${Math.round(ev.timeMs)}`;
+    if(seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+}
+function stopPlay(){
+  loopActive=false;loopTimeouts.forEach(t=>clearTimeout(t));loopTimeouts=[];
+  document.querySelectorAll('.beat-slot').forEach(s=>s.classList.remove('beat-active'));
+  document.getElementById('playBtn').style.display='';document.getElementById('stopBtn').style.display='none';
+}
+function scheduleRound(rep, beatDur, roundDur, t0){
+  if(!loopActive) return;
+  const ctx=getCtx();
+  for(let mi=0;mi<measureCount;mi++){
+    const evs=buildEvents(mi,beatDur);
+    const offSec=rep*roundDur+mi*4*beatDur;
+    const offMs=offSec*1000;
+    evs.forEach(ev=>{
+      const evMs=ev.circular?(offMs+(ev.timeMs<0?ev.timeMs+(4*beatDur*1000):ev.timeMs)):offMs+ev.timeMs;
+      const evSec=evMs/1000;
+      if(ev.type==='beat'){
+        const t=setTimeout(()=>{
+          if(!loopActive) return;
+          document.querySelectorAll('.beat-slot').forEach(s=>s.classList.remove('beat-active'));
+          const slots=document.querySelectorAll(`#measureRow${ev.mi+1} .beat-slot`);
+          if(slots[ev.beatIdx]) slots[ev.beatIdx].classList.add('beat-active');
+        },evMs+50);
+        loopTimeouts.push(t);
+      }
+      if(ev.type==='syllable'){
+        const freq=getFreqForEvent(ev);
+        const vol=ev.isDownbeat?.7:ev.isMain?.5:.35;
+        if(soundMode==='beep') playBeep(t0+evSec,freq,vol);
+        else if(soundMode==='drums') playDrum(t0+evSec,ev.isDownbeat,ev.isMain);
+        else if(soundMode==='marimba') playMarimba(t0+evSec,freq,vol);
+      }
+    });
+  }
+}
+
+function playAll(){
+  const any=measures.slice(0,measureCount).some(m=>m.some(Boolean));
+  if(!any){showToast('קודם שמים לפחות פרי אחד בתיבה 🍓');return;}
+  stopPlay();getCtx();loopActive=true;
+  document.getElementById('playBtn').style.display='none';
+  document.getElementById('stopBtn').style.display='';
+  const bpm=parseInt(document.getElementById('tempoSlider').value)||88;
+  const beatDur=60/bpm, roundDur=measureCount*4*beatDur;
+  const ctx=getCtx(), t0=ctx.currentTime+.05;
+
+  if(repSetting==='loop'){
+    // לופ: מתזמן רק רונד אחד קדימה בכל פעם
+    let rep=0;
+    function scheduleNext(){
+      if(!loopActive) return;
+      scheduleRound(rep, beatDur, roundDur, t0);
+      rep++;
+      const t=setTimeout(scheduleNext, roundDur*1000-200);
+      loopTimeouts.push(t);
+    }
+    scheduleNext();
+  } else {
+    // חזרות קבועות: מתזמן הכל מראש
+    for(let rep=0;rep<repSetting;rep++) scheduleRound(rep, beatDur, roundDur, t0);
+    const t=setTimeout(()=>stopPlay(), repSetting*roundDur*1000+500);
+    loopTimeouts.push(t);
+  }
+}
+function sharebeat(){
+  const p=new URLSearchParams();
+  p.set('m1',measures[0].map(x=>x||'').join(','));
+  p.set('m2',measures[1].map(x=>x||'').join(','));
+  p.set('scale',document.getElementById('scaleSelect').value);
+  p.set('root',document.getElementById('rootSelect').value);
+  p.set('bpm',document.getElementById('tempoSlider').value);
+  p.set('mode',soundMode);
+  p.set('mc',measureCount);
+  const base=location.href.split('?')[0].split('#')[0];
+  const url=base+'?'+p.toString();
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(()=>showToast('הלינק הועתק! 🎵'));
+  } else {
+    const ta=document.createElement('textarea');ta.value=url;
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');
+    document.body.removeChild(ta);showToast('הלינק הועתק! 🎵');
+  }
+}
+function showToast(msg){
+  const t=document.getElementById('shareToast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+function loadFromURL(){
+  const p=new URLSearchParams(location.search);
+  if(!p.has('m1')) return;
+  const m1=p.get('m1').split(','),m2=p.get('m2').split(',');
+  for(let i=0;i<4;i++){measures[0][i]=m1[i]||null;measures[1][i]=m2[i]||null;}
+  if(p.has('scale')) document.getElementById('scaleSelect').value=p.get('scale');
+  if(p.has('root')) document.getElementById('rootSelect').value=p.get('root');
+  if(p.has('bpm')){document.getElementById('tempoSlider').value=p.get('bpm');document.getElementById('tempoVal').textContent=p.get('bpm');}
+  if(p.has('mode')) setMode(p.get('mode'));
+  if(p.has('mc')) setMeasures(+p.get('mc'));
+  updateScale();
+  renderMeasure(0);renderMeasure(1);
+}
+function handleDownload(){
+  const fmt=document.getElementById('dlFormat').value;
+  if(fmt==='wav') downloadWAV(); else downloadMIDI();
+}
+function downloadWAV(){
+  if(!window.OfflineAudioContext&&!window.webkitOfflineAudioContext){
+    showToast('הורדה זמינה רק בדפדפן מחוץ ל-Claude');return;
+  }
+  const bpm=parseInt(document.getElementById('tempoSlider').value)||88;
+  const beatDur=60/bpm,reps=repSetting==='loop'?2:repSetting;
+  const roundDur=measureCount*4*beatDur;
+  const sampleRate=44100,numSamples=Math.ceil((reps*roundDur+.5)*sampleRate);
+  const offCtx=new OfflineAudioContext(1,numSamples,sampleRate);
+  for(let rep=0;rep<reps;rep++){
+    for(let mi=0;mi<measureCount;mi++){
+      const evs=buildEvents(mi,beatDur);
+      const offSec=rep*roundDur+mi*4*beatDur;
+      evs.forEach(ev=>{
+        if(ev.type!=='syllable') return;
+        const evSec=ev.circular?(offSec+(ev.timeMs<0?ev.timeMs/1000+(4*beatDur):ev.timeMs/1000)):offSec+ev.timeMs/1000;
+        const t=evSec+.05,freq=getFreqForEvent(ev),vol=ev.isDownbeat?.7:ev.isMain?.5:.35;
+        if(soundMode==='drums'){
+          if(ev.isDownbeat||ev.isMain) renderKickOffline(offCtx,t,ev.isDownbeat);
+          else renderSnareOffline(offCtx,t);
+        }
+        else if(soundMode==='beep') renderBeepOffline(offCtx,t,freq,vol);
+        else renderMarimbaOffline(offCtx,t,freq,vol);
+      });
+    }
+  }
+  offCtx.startRendering().then(r=>downloadBlob(encodeWAV(r.getChannelData(0),sampleRate),'beat-it.wav','audio/wav'));
+}
+function renderMarimbaOffline(ctx,time,freq,vol){
+  const car=ctx.createOscillator(),carG=ctx.createGain();
+  car.type='sine';car.frequency.value=freq;
+  const mod=ctx.createOscillator(),modG=ctx.createGain();
+  mod.type='sine';mod.frequency.value=freq*3.5;
+  modG.gain.setValueAtTime(freq*1.2,time);modG.gain.exponentialRampToValueAtTime(.001,time+.04);
+  mod.connect(modG);modG.connect(car.frequency);
+  carG.gain.setValueAtTime(vol,time);carG.gain.exponentialRampToValueAtTime(.001,time+.45);
+  car.connect(carG);carG.connect(ctx.destination);
+  mod.start(time);mod.stop(time+.05);car.start(time);car.stop(time+.5);
+}
+function renderKickOffline(ctx,time,isDownbeat){
+  const o=ctx.createOscillator(),g=ctx.createGain();
+  o.connect(g);g.connect(ctx.destination);
+  o.frequency.setValueAtTime(isDownbeat?200:160,time);o.frequency.exponentialRampToValueAtTime(35,time+.18);
+  g.gain.setValueAtTime(isDownbeat?.9:.65,time);g.gain.exponentialRampToValueAtTime(.001,time+.22);
+  o.start(time);o.stop(time+.24);
+}
+function renderSnareOffline(ctx,time){
+  const buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*.12),ctx.sampleRate);
+  const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  const src=ctx.createBufferSource(),hp=ctx.createBiquadFilter(),g=ctx.createGain();
+  src.buffer=buf;hp.type='highpass';hp.frequency.value=2000;
+  src.connect(hp);hp.connect(g);g.connect(ctx.destination);
+  g.gain.setValueAtTime(.25,time);g.gain.exponentialRampToValueAtTime(.001,time+.07);
+  src.start(time);src.stop(time+.08);
+}
+function renderBeepOffline(ctx,time,freq,vol){
+  const osc=ctx.createOscillator();osc.type='sawtooth';osc.frequency.value=freq;
+  const filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=freq*4;filter.Q.value=1.2;
+  const g=ctx.createGain(),v=(vol||0.4)*.6;
+  g.gain.setValueAtTime(0.001,time);g.gain.linearRampToValueAtTime(v,time+0.03);
+  g.gain.setValueAtTime(v,time+0.18);g.gain.exponentialRampToValueAtTime(0.001,time+0.38);
+  osc.connect(filter);filter.connect(g);g.connect(ctx.destination);
+  osc.start(time);osc.stop(time+0.4);
+}
+function encodeWAV(pcm,sr){
+  const len=pcm.length,buf=new ArrayBuffer(44+len*2),view=new DataView(buf);
+  function ws(off,str){for(let i=0;i<str.length;i++)view.setUint8(off+i,str.charCodeAt(i));}
+  ws(0,'RIFF');view.setUint32(4,36+len*2,true);ws(8,'WAVE');ws(12,'fmt ');
+  view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,1,true);
+  view.setUint32(24,sr,true);view.setUint32(28,sr*2,true);
+  view.setUint16(32,2,true);view.setUint16(34,16,true);ws(36,'data');view.setUint32(40,len*2,true);
+  let off=44;for(let i=0;i<len;i++){let s=Math.max(-1,Math.min(1,pcm[i]));view.setInt16(off,s<0?s*0x8000:s*0x7FFF,true);off+=2;}
+  return buf;
+}
+function downloadMIDI(){
+  const bpm=parseInt(document.getElementById('tempoSlider').value)||88;
+  const beatDur=60/bpm,reps=repSetting==='loop'?2:repSetting;
+  const tpb=480,mpb=Math.round(60000000/bpm);
+  const intervals=currentScaleIntervals;
+  const rootMidi=ROOT_MIDI[document.getElementById('rootSelect').value];
+  // אותם תווים שמתנגנים בדפדפן
+  function getNoteMidi(ev){
+    const f=getFreqForEvent(ev);
+    if(f) return Math.round(69+12*Math.log2(f/440));
+    return rootMidi+intervals[0];
+  }
+  const noteEvs=[];
+  for(let rep=0;rep<reps;rep++){
+    for(let mi=0;mi<measureCount;mi++){
+      const evs=buildEvents(mi,beatDur);
+      const offSec=rep*measureCount*4*beatDur+mi*4*beatDur;
+      evs.forEach(ev=>{
+        if(ev.type!=='syllable') return;
+        const evSec=ev.circular?(offSec+(ev.timeMs<0?ev.timeMs/1000+(4*beatDur):ev.timeMs/1000)):offSec+ev.timeMs/1000;
+        const tick=Math.round(evSec/beatDur*tpb);
+        const note=getNoteMidi(ev);
+        const vel=ev.isDownbeat?100:ev.isMain?80:60;
+        noteEvs.push({tick,note,vel,durTicks:Math.round(tpb*(ev.isMain?.4:.2))});
+      });
+    }
+  }
+  noteEvs.sort((a,b)=>a.tick-b.tick);
+  const tb=[];
+  function vl(v){const b=[];let vv=v;b.unshift(vv&0x7f);vv>>=7;while(vv>0){b.unshift((vv&0x7f)|0x80);vv>>=7;}b.forEach(x=>tb.push(x));}
+  function pb(...bs){bs.forEach(b=>tb.push(b));}
+  vl(0);pb(0xFF,0x51,0x03,(mpb>>16)&0xff,(mpb>>8)&0xff,mpb&0xff);
+  const pairs=[];
+  noteEvs.forEach(ev=>{pairs.push({tick:ev.tick,type:'on',note:ev.note,vel:ev.vel});pairs.push({tick:ev.tick+ev.durTicks,type:'off',note:ev.note});});
+  pairs.sort((a,b)=>a.tick-b.tick||(a.type==='off'?-1:1));
+  let cur=0;pairs.forEach(ev=>{vl(ev.tick-cur);cur=ev.tick;if(ev.type==='on')pb(0x90,ev.note,ev.vel);else pb(0x80,ev.note,0);});
+  vl(0);pb(0xFF,0x2F,0x00);
+  const hdr=[0x4D,0x54,0x68,0x64,0,0,0,6,0,0,0,1,(tpb>>8)&0xff,tpb&0xff];
+  const tLen=tb.length,th=[0x4D,0x54,0x72,0x6B,(tLen>>24)&0xff,(tLen>>16)&0xff,(tLen>>8)&0xff,tLen&0xff];
+  const all=new Uint8Array(hdr.length+th.length+tb.length);
+  all.set(hdr,0);all.set(th,hdr.length);all.set(tb,hdr.length+th.length);
+  downloadBlob(all.buffer,'beat-it.mid','audio/midi');
+}
+function downloadBlob(buf,name,type){
+  const url=URL.createObjectURL(new Blob([buf],{type}));
+  const a=document.createElement('a');a.href=url;a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+buildMeasureDOM(0);buildMeasureDOM(1);buildBank();loadFromURL();
+</script>
+<script src="https://boazbareket1.github.io/access-gate/dev-note.js" data-tool="fruty-beat" defer></script>
+</body>
+</html>
